@@ -2,7 +2,8 @@ from argparse import ArgumentParser
 from matplotlib import pyplot as plt
 from pathlib import Path
 
-from segmentation.utils import load_raw_volume, load_labels_volume, show_slices, allow_memory_growth
+from segmentation.dataset import load_raw_volume, load_labels_volume
+from segmentation.utils import show_slices, allow_memory_growth
 
 
 def main(args):
