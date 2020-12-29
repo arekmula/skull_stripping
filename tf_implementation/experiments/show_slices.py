@@ -3,7 +3,7 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 
 from segmentation.dataset import split_first_dataset, split_second_dataset, load_raw_volume, load_labels_volume,\
-    get_axes_slices_from_volume
+    get_axes_slices_from_volume, normalize_slice_values
 from segmentation.utils import show_slices
 
 
@@ -23,6 +23,8 @@ def main(args):
         mask_volume = load_labels_volume(scan[1])
 
         xyz_scan_slices = get_axes_slices_from_volume(raw_volume=raw_volume)
+        xyz_scan_slices = normalize_slice_values(scan_slices=xyz_scan_slices)
+
         xyz_labels_slices = get_axes_slices_from_volume(raw_volume=mask_volume)
 
         show_slices(xyz_scan_slices)

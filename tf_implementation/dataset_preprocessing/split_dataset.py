@@ -16,12 +16,17 @@ def main(args):
         val_set += second_val_set
 
     train_set_path = args.train_set_save_path
+
+    scan_number = 0
+
     for scan in train_set:
-        save_scan_to_xyz_slices(scan, train_set_path)
+        save_scan_to_xyz_slices(scan, train_set_path, scan_number)
+        scan_number += 1
 
     val_set_path = args.val_set_save_path
     for scan in val_set:
-        save_scan_to_xyz_slices(scan, val_set_path)
+        save_scan_to_xyz_slices(scan, val_set_path, scan_number)
+        scan_number += 1
 
 
 if __name__ == '__main__':

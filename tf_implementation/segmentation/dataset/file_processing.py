@@ -1,5 +1,6 @@
 import nibabel as nib
 import numpy as np
+from PIL import Image
 
 from pathlib import Path
 from sklearn.model_selection import train_test_split
@@ -97,10 +98,11 @@ def split_second_dataset(train_set_path: Path):
     return train_scans, val_scans
 
 
-def save_scan_to_xyz_slices(scan: Tuple, save_path: Path):
+def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int):
     """
     Splits scan and scan's label to separate x, y, z slices and then saves it to separate files.
 
+    :param scan_number: scan number to store
     :param scan: Tuple containing path to scan and path to corresponding label
     :param save_path: Path to folder where slices will be stored. The folder should have following structure:
     main folder/
@@ -118,22 +120,23 @@ def save_scan_to_xyz_slices(scan: Tuple, save_path: Path):
     :return:
     """
     file_extension = ".nii.gz"
-    scan_name = scan[0].name[:-len(file_extension)]
+    scan_name = scan[0].name[:-len(file_extension)] + "_" + str(scan_number)
     axes = ["x", "y", "z"]
 
     raw_volume, affine = load_raw_volume(scan[0])
     mask_volume = load_labels_volume(scan[1])
 
     xyz_scans = get_axes_slices_from_volume(raw_volume=raw_volume)
+    xyz_scans = normalize_slice_values(xyz_scans)
     xyz_labels = get_axes_slices_from_volume(raw_volume=mask_volume)
 
     print(f"\r Saving scan: {scan_name}")
     for ax_scan, ax_label, ax in zip(xyz_scans, xyz_labels, axes):
-        path = save_path / Path(ax) / Path("scans") / Path(scan_name)
-        np.save(path, ax_scan)
+        path = save_path / Path(ax) / Path("scans") / Path(scan_name + ".png")
+        save_image_to_png(ax_scan, path)
 
-        path = save_path / Path(ax) / Path("labels") / Path(scan_name)
-        np.save(path, ax_scan)
+        path = save_path / Path(ax) / Path("labels") / Path(scan_name + ".png")
+        save_image_to_png(ax_label, path)
 
     path = save_path / Path("affine") / Path(scan_name)
     np.save(path, affine)
@@ -152,3 +155,32 @@ def get_axes_slices_from_volume(raw_volume: np.ndarray):
     xyz_slices = [x_slice, y_slice, z_slice]
 
     return xyz_slices
+
+
+def normalize_slice_values(scan_slices: list):
+    """
+    Normalizes slice image values for each axis to range 0-255 and dtype np.uint8
+
+    :param scan_slices: list of slices for each axis
+    :return: normalized list of slices for each axis
+    """
+    xyz_scan_slices = []
+    for ax_scan_slice in scan_slices:
+        data = ((ax_scan_slice.astype(np.float32)) / np.max(ax_scan_slice))
+        data = data * 255
+        data = data.astype(np.uint8)
+        xyz_scan_slices.append(data)
+
+    return xyz_scan_slices
+
+
+def save_image_to_png(image: np.ndarray, save_path: Path):
+    """
+    Saves image to .png format on given path
+
+    :param image: image to save
+    :param save_path: path where image will be saved
+    :return:
+    """
+    img = Image.fromarray(image)
+    img.save(save_path, format="PNG", optimize=False, compress_level=0)
