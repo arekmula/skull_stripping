@@ -1,44 +1,42 @@
 from argparse import ArgumentParser
-from matplotlib import pyplot as plt
 from pathlib import Path
+from matplotlib import pyplot as plt
 
-from segmentation.dataset import load_raw_volume, load_labels_volume
-from segmentation.utils import show_slices, allow_memory_growth
+from segmentation.dataset import split_first_dataset, split_second_dataset, load_raw_volume, load_labels_volume
+from segmentation.utils import show_slices
 
 
 def main(args):
-    slice_raw_volume_path = args.slice_raw_volume_path
-    slice_label_path = args.slice_label_path
 
-    # affine variable will be needed when saving a prediction
-    raw_volume, affine = load_raw_volume(Path(slice_raw_volume_path))
-    mask_volume = load_labels_volume(Path(slice_label_path))
+    first_dataset_path = args.first_dataset_path
+    second_dataset_path = args.second_dataset_path
 
-    show_slices([raw_volume[raw_volume.shape[0] // 2],  # Middle 2D slice in x axis
-                 raw_volume[:, raw_volume.shape[1] // 2],  # Middle 2D slice in y axis
-                 raw_volume[:, :, raw_volume.shape[2] // 2]])  # Middle 2D slice in z axis
+    train_set, val_set = split_first_dataset(Path(first_dataset_path))
+    if second_dataset_path is not None:
+        second_train_set, second_val_set = split_second_dataset(Path(second_dataset_path))
+        train_set += second_train_set
+        val_set += second_val_set
 
-    show_slices([mask_volume[mask_volume.shape[0] // 2],  # Middle 2D slice in x axis
-                 mask_volume[:, mask_volume.shape[1] // 2],  # Middle 2D slice in y axis
-                 mask_volume[:, :, mask_volume.shape[2] // 2]])  # Middle 2D slice in z axis
+    for scan in train_set:
+        raw_volume, affine = load_raw_volume(scan[0])
+        mask_volume = load_labels_volume(scan[1])
 
-    plt.show()
+        show_slices([raw_volume[raw_volume.shape[0] // 2],  # Middle 2D slice in x axis
+                     raw_volume[:, raw_volume.shape[1] // 2],  # Middle 2D slice in y axis
+                     raw_volume[:, :, raw_volume.shape[2] // 2]])  # Middle 2D slice in z axis
+
+        show_slices([mask_volume[mask_volume.shape[0] // 2],  # Middle 2D slice in x axis
+                     mask_volume[:, mask_volume.shape[1] // 2],  # Middle 2D slice in y axis
+                     mask_volume[:, :, mask_volume.shape[2] // 2]])  # Middle 2D slice in z axis
+
+        plt.show()
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-
-    # pass arguments
-    parser.add_argument('--allow-memory-growth', action='store_true', default=True)
-    parser.add_argument('-srvp', '--slice_raw_volume_path', metavar="slice_raw_volume_path", type=str,
-                        help="Path to the raw volume of slice you want to show")
-
-    parser.add_argument('-slp', '--slice_label_path', metavar="slice_label_path", type=str,
-                        help="Path to the label of slice you want to show")
+    parser.add_argument("--first_dataset_path", metavar="first_dataset_path", type=str, required=True)
+    parser.add_argument("--second_dataset_path", metavar="second_dataset_path", type=str, default=None)
 
     args, _ = parser.parse_known_args()
-
-    if args.allow_memory_growth:
-        allow_memory_growth()
 
     main(args)
