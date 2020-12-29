@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from segmentation.dataset import split_first_dataset, split_second_dataset
+from segmentation.dataset import split_first_dataset, split_second_dataset, save_scan_to_xyz_slices
 
 
 def main(args):
@@ -15,14 +15,21 @@ def main(args):
         train_set += second_train_set
         val_set += second_val_set
 
-    print(len(train_set))
-    print(len(val_set))
+    train_set_path = args.train_set_save_path
+    for scan in train_set:
+        save_scan_to_xyz_slices(scan, train_set_path)
+
+    val_set_path = args.val_set_save_path
+    for scan in val_set:
+        save_scan_to_xyz_slices(scan, val_set_path)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--first_dataset_path", metavar="first_dataset_path", type=str, required=True)
     parser.add_argument("--second_dataset_path", metavar="second_dataset_path", type=str, default=None)
+    parser.add_argument("--train_set_save_path", metavar="train_set_save_path", type=str, required=True)
+    parser.add_argument("--val_set_save_path", metavar="val_set_save_path", type=str, required=True)
 
     args, _ = parser.parse_known_args()
 

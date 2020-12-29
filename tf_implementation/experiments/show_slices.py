@@ -2,7 +2,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from matplotlib import pyplot as plt
 
-from segmentation.dataset import split_first_dataset, split_second_dataset, load_raw_volume, load_labels_volume
+from segmentation.dataset import split_first_dataset, split_second_dataset, load_raw_volume, load_labels_volume,\
+    get_axes_slices_from_volume
 from segmentation.utils import show_slices
 
 
@@ -21,13 +22,11 @@ def main(args):
         raw_volume, affine = load_raw_volume(scan[0])
         mask_volume = load_labels_volume(scan[1])
 
-        show_slices([raw_volume[raw_volume.shape[0] // 2],  # Middle 2D slice in x axis
-                     raw_volume[:, raw_volume.shape[1] // 2],  # Middle 2D slice in y axis
-                     raw_volume[:, :, raw_volume.shape[2] // 2]])  # Middle 2D slice in z axis
+        xyz_scan_slices = get_axes_slices_from_volume(raw_volume=raw_volume)
+        xyz_labels_slices = get_axes_slices_from_volume(raw_volume=mask_volume)
 
-        show_slices([mask_volume[mask_volume.shape[0] // 2],  # Middle 2D slice in x axis
-                     mask_volume[:, mask_volume.shape[1] // 2],  # Middle 2D slice in y axis
-                     mask_volume[:, :, mask_volume.shape[2] // 2]])  # Middle 2D slice in z axis
+        show_slices(xyz_scan_slices)
+        show_slices(xyz_labels_slices)
 
         plt.show()
 

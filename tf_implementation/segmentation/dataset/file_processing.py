@@ -45,7 +45,7 @@ def save_labels(data: np.ndarray, affine: np.ndarray, path: Path):
 
 def split_first_dataset(train_set_path: Path):
     """
-    Function that splits train set from 1st dataset into train and validation set
+    Splits train set from 1st dataset into train and validation set
 
     :param train_set_path: path to folder containing train scans where all labels and scans are in the same directory
     :return train_scans: list of tuples containing path for train scan and path for corresponding mask
@@ -73,7 +73,7 @@ def split_first_dataset(train_set_path: Path):
 
 def split_second_dataset(train_set_path: Path):
     """
-    Function that splits train set from 2nd dataset into train and validation set
+    Splits train set from 2nd dataset into train and validation set
 
     :param train_set_path: path to folder where each train scan has separate folder containing scan and label
     :return train_scans: list of tuples containing path for train scan and path for corresponding mask
@@ -95,3 +95,60 @@ def split_second_dataset(train_set_path: Path):
     print(f"Number of validation scans from second dataset: {len(val_scans)}")
 
     return train_scans, val_scans
+
+
+def save_scan_to_xyz_slices(scan: Tuple, save_path: Path):
+    """
+    Splits scan and scan's label to separate x, y, z slices and then saves it to separate files.
+
+    :param scan: Tuple containing path to scan and path to corresponding label
+    :param save_path: Path to folder where slices will be stored. The folder should have following structure:
+    main folder/
+                affine/
+                x/
+                    labels/
+                    scans/
+                y/
+                    labels/
+                    scans/
+                z/
+                    labels/
+                    scans/
+
+    :return:
+    """
+    file_extension = ".nii.gz"
+    scan_name = scan[0].name[:-len(file_extension)]
+    axes = ["x", "y", "z"]
+
+    raw_volume, affine = load_raw_volume(scan[0])
+    mask_volume = load_labels_volume(scan[1])
+
+    xyz_scans = get_axes_slices_from_volume(raw_volume=raw_volume)
+    xyz_labels = get_axes_slices_from_volume(raw_volume=mask_volume)
+
+    print(f"\r Saving scan: {scan_name}")
+    for ax_scan, ax_label, ax in zip(xyz_scans, xyz_labels, axes):
+        path = save_path / Path(ax) / Path("scans") / Path(scan_name)
+        np.save(path, ax_scan)
+
+        path = save_path / Path(ax) / Path("labels") / Path(scan_name)
+        np.save(path, ax_scan)
+
+    path = save_path / Path("affine") / Path(scan_name)
+    np.save(path, affine)
+
+
+def get_axes_slices_from_volume(raw_volume: np.ndarray):
+    """
+    Returns middle x, y, z slices from given scan volume.
+
+    :param raw_volume: Scan volume
+    :return: middle x, y, z slices
+    """
+    x_slice = raw_volume[raw_volume.shape[0] // 2]  # Middle 2D slice in x axis
+    y_slice = raw_volume[:, raw_volume.shape[1] // 2]  # Middle 2D slice in y axis
+    z_slice = raw_volume[:, :, raw_volume.shape[2] // 2]  # Middle 2D slice in z axis
+    xyz_slices = [x_slice, y_slice, z_slice]
+
+    return xyz_slices
