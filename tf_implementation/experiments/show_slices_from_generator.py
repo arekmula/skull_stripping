@@ -9,8 +9,7 @@ def main(args):
     train_path = Path(args.train_dir_path)
     val_path = Path(args.val_dir_path)
 
-    train_scans, val_scans = scans_generator(train_path, val_path)
-
+    train_scans, val_scans, train_samples, val_samples = scans_generator(train_path, val_path)
     # Get batch of data
     images, masks = next(train_scans)
 

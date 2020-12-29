@@ -21,6 +21,8 @@ def scans_generator(scans_train_directory_path: Path, scans_val_directory_path: 
     a batch of images with shape (batch_size, *target_size, channels) and y is a numpy array of corresponding labels
     :return val_combined_generator: A DirectoryIterator yielding tuples of (x, y) where x is a numpy array containing
     a batch of images with shape (batch_size, *target_size, channels) and y is a numpy array of corresponding labels
+    :return train_samples: number of training samples in dataset
+    :return val_samples: number of validation samples in dataset
     """
 
     # Preprocess image based on backbone implementation
@@ -73,4 +75,7 @@ def scans_generator(scans_train_directory_path: Path, scans_val_directory_path: 
     train_combined_generator = zip(train_images_generator, train_masks_generator)
     val_combined_generator = zip(val_images_generator, val_masks_generator)
 
-    return train_combined_generator, val_combined_generator
+    train_samples = train_images_generator.n
+    val_samples = val_images_generator.n
+
+    return train_combined_generator, val_combined_generator, train_samples, val_samples
