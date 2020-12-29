@@ -9,6 +9,7 @@ from typing import List
 def show_slices(slices: List[np.ndarray]):
     """
     Shows slices from axis x, y, z
+
     :param slices: list of image slices from axis x, y, z
     :return:
     """
@@ -20,6 +21,7 @@ def show_slices(slices: List[np.ndarray]):
 def print_voxels_size(path: Path):
     """
     Prints size of voxels in millimeters
+
     :param path: path to folder containing masks
     :return:
     """

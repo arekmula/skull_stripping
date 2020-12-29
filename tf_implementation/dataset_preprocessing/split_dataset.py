@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from segmentation.utils import print_voxels_size
+from segmentation.dataset import split_first_dataset, split_second_dataset
 
 
 def main(args):
@@ -9,9 +9,14 @@ def main(args):
     first_dataset_path = args.first_dataset_path
     second_dataset_path = args.second_dataset_path
 
-    print_voxels_size(Path(first_dataset_path))
+    train_set, val_set = split_first_dataset(Path(first_dataset_path))
     if second_dataset_path is not None:
-        print_voxels_size(Path(second_dataset_path))
+        second_train_set, second_val_set = split_second_dataset(Path(second_dataset_path))
+        train_set += second_train_set
+        val_set += second_val_set
+
+    print(len(train_set))
+    print(len(val_set))
 
 
 if __name__ == '__main__':

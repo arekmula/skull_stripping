@@ -9,6 +9,7 @@ from typing import Tuple
 def load_raw_volume(path: Path) -> Tuple[np.ndarray, np.ndarray]:
     """
     Loads volume of skull's scan
+
     :param path: path to scan of skull
     :return raw_data: raw volume data of skull scan
     "return data.affine: affine transformation from skull scan
@@ -22,6 +23,7 @@ def load_raw_volume(path: Path) -> Tuple[np.ndarray, np.ndarray]:
 def load_labels_volume(path: Path) -> np.ndarray:
     """
     Loads label volume from given path
+
     :param path: path to labeled scan of skull
     :return: raw data of label's volume
     """
@@ -32,6 +34,7 @@ def load_labels_volume(path: Path) -> np.ndarray:
 def save_labels(data: np.ndarray, affine: np.ndarray, path: Path):
     """
     Saves labels in nibabel format
+
     :param data: 3D array with label
     :param affine: affine transformation from input nibabel image
     :param path: path to save label
@@ -43,7 +46,8 @@ def save_labels(data: np.ndarray, affine: np.ndarray, path: Path):
 def split_first_dataset(train_set_path: Path):
     """
     Function that splits train set from 1st dataset into train and validation set
-    :param train_set_path: path to folder containing train scans where labels and scans are in the same directory
+
+    :param train_set_path: path to folder containing train scans where all labels and scans are in the same directory
     :return train_scans: list of tuples containing path for train scan and path for corresponding mask
     :return val_scans: list of tuples containing path for validation scan and path for corresponding mask
     """
@@ -63,5 +67,31 @@ def split_first_dataset(train_set_path: Path):
 
     print(f"Number of train scans from first dataset: {len(train_scans)}")
     print(f"Number of validation scans from first dataset: {len(val_scans)}")
+
+    return train_scans, val_scans
+
+
+def split_second_dataset(train_set_path: Path):
+    """
+    Function that splits train set from 2nd dataset into train and validation set
+
+    :param train_set_path: path to folder where each train scan has separate folder containing scan and label
+    :return train_scans: list of tuples containing path for train scan and path for corresponding mask
+    :return val_scans: list of tuples containing path for validation scan and path for corresponding mask
+    """
+
+    scan_filename = "T1w.nii.gz"
+    mask_filename = "mask.nii.gz"
+    scan_list = []  # List of tuples containing scans and their masks
+
+    for scan_folder_path in train_set_path.iterdir():
+        scan_full_path = scan_folder_path / scan_filename
+        mask_full_path = scan_folder_path / mask_filename
+        scan_list.append((scan_full_path, mask_full_path))
+
+    train_scans, val_scans = train_test_split(scan_list, random_state=42, train_size=0.8)
+
+    print(f"Number of train scans from second dataset: {len(train_scans)}")
+    print(f"Number of validation scans from second dataset: {len(val_scans)}")
 
     return train_scans, val_scans
