@@ -108,14 +108,14 @@ def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int):
     main folder/
                 affine/
                 x/
-                    labels/
-                    scans/
+                    labels/images/
+                    scans/images/
                 y/
-                    labels/
-                    scans/
+                    labels/images/
+                    scans/images/
                 z/
-                    labels/
-                    scans/
+                    labels/images/
+                    scans/images/
 
     :return:
     """
@@ -132,10 +132,10 @@ def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int):
 
     print(f"\r Saving scan: {scan_name}")
     for ax_scan, ax_label, ax in zip(xyz_scans, xyz_labels, axes):
-        path = save_path / Path(ax) / Path("scans") / Path(scan_name + ".png")
+        path = save_path / Path(ax) / Path("scans/images") / Path(scan_name + ".png")
         save_image_to_png(ax_scan, path)
 
-        path = save_path / Path(ax) / Path("labels") / Path(scan_name + ".png")
+        path = save_path / Path(ax) / Path("labels/images") / Path(scan_name + ".png")
         save_image_to_png(ax_label, path)
 
     path = save_path / Path("affine") / Path(scan_name)
