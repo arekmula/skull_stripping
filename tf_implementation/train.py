@@ -19,7 +19,7 @@ def main(args):
     else:
         backbone = "efficientnetb0"
 
-    batch_size = 16
+    batch_size = args.batch_size
 
     train_generator, val_generator, train_samples, val_samples = scans_generator(train_path,
                                                                                  val_path,
@@ -36,7 +36,7 @@ def main(args):
         train_generator,
         steps_per_epoch=train_samples//batch_size,
         validation_data=val_generator,
-        validation_steps=val_samples//batch_size,
+        validation_steps=val_samples//batch_size*2,
         epochs=20,
         verbose=1
     )
