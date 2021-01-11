@@ -6,7 +6,7 @@ from pathlib import Path
 
 from segmentation.dataset import scans_generator
 from segmentation.models import get_unet_model
-from segmentation.losses import dice_coef_loss, dice_coef
+from segmentation.losses import dice_coef, dice_accuracy
 from segmentation.utils import allow_memory_growth
 
 
@@ -29,8 +29,8 @@ def main(args):
     model = get_unet_model(backbone=backbone, classes=1, activation="sigmoid", encoder_weights="imagenet")
     model.compile(
         optimizer=tf.keras.optimizers.Adam(lr=3e-4),
-        loss=tf.keras.losses.BinaryCrossentropy(),
-        metrics=tf.keras.metrics.BinaryAccuracy()
+        loss=dice_coef,
+        metrics=[dice_accuracy]
     )
     model.fit(
         train_generator,
