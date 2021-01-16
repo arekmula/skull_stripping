@@ -5,7 +5,7 @@ from segmentation_models import get_preprocessing
 
 
 def scans_generator(scans_train_directory_path: Path, scans_val_directory_path: Path, batch_size=16,
-                    target_size=(128, 128), shuffle=True, backbone="efficientnetb0"):
+                    target_size=(256, 256), shuffle=True, backbone="efficientnetb0"):
     """
     Tensorflow dataset generator.
 

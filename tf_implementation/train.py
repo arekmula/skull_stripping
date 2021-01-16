@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 from tensorflow import keras
 
@@ -28,15 +29,36 @@ def main(args):
 
     model = get_unet_model(backbone=backbone, classes=1, activation="sigmoid", encoder_weights="imagenet")
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(lr=3e-4),
+        optimizer=tf.keras.optimizers.Adam(lr=1e-3),
         loss=dice_coef,
         metrics=[dice_accuracy]
     )
+
+    callbacks = [
+        keras.callbacks.EarlyStopping(
+            monitor="val_dice_accuracy",
+            patience=2,
+            verbose=1
+        ),
+        keras.callbacks.ModelCheckpoint(
+            monitor="val_dice_accuracy",
+            save_best_only=1,
+            verbose=1,
+            filepath="model_{epoch}"
+        ),
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_dice_accuracy",
+            factor=0.5,
+            patience=2
+        )
+    ]
+
     model.fit(
         train_generator,
         steps_per_epoch=train_samples//batch_size,
         validation_data=val_generator,
         validation_steps=val_samples//batch_size*2,
+        callbacks=callbacks,
         epochs=20,
         verbose=1
     )
