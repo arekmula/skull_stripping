@@ -2,6 +2,7 @@ import nibabel as nib
 import numpy as np
 from PIL import Image
 
+from matplotlib import pyplot as plt
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from typing import Tuple
@@ -98,10 +99,11 @@ def split_second_dataset(train_set_path: Path):
     return train_scans, val_scans
 
 
-def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int):
+def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int, axis="x"):
     """
     Splits scan and scan's label to separate x, y, z slices and then saves it to separate files.
 
+    :param axis: axis to split
     :param scan_number: scan number to store
     :param scan: Tuple containing path to scan and path to corresponding label
     :param save_path: Path to folder where slices will be stored. The folder should have following structure:
@@ -121,40 +123,57 @@ def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int):
     """
     file_extension = ".nii.gz"
     scan_name = scan[0].name[:-len(file_extension)] + "_" + str(scan_number)
-    axes = ["x", "y", "z"]
 
     raw_volume, affine = load_raw_volume(scan[0])
     mask_volume = load_labels_volume(scan[1])
 
-    xyz_scans = get_axes_slices_from_volume(raw_volume=raw_volume)
-    xyz_scans = normalize_slice_values(xyz_scans)
-    xyz_labels = get_axes_slices_from_volume(raw_volume=mask_volume)
+    x_scans = get_axes_slices_from_volume(raw_volume=raw_volume, axis=axis)
+    x_scans = normalize_slice_values(x_scans)
+    x_labels = get_axes_slices_from_volume(raw_volume=mask_volume, axis=axis)
 
     print(f"\r Saving scan: {scan_name}")
-    for ax_scan, ax_label, ax in zip(xyz_scans, xyz_labels, axes):
-        path = save_path / Path(ax) / Path("scans/images") / Path(scan_name + ".png")
-        save_image_to_png(ax_scan, path)
+    for scan_number, (scan, label) in enumerate(zip(x_scans, x_labels)):
+        path = save_path / Path(axis) / Path("scans/images") / Path(scan_name + str(scan_number) + ".png")
+        save_image_to_png(scan, path)
 
-        path = save_path / Path(ax) / Path("labels/images") / Path(scan_name + ".png")
-        save_image_to_png(ax_label, path)
+        path = save_path / Path(axis) / Path("labels/images") / Path(scan_name + str(scan_number) + ".png")
+        save_image_to_png(label, path)
 
     path = save_path / Path("affine") / Path(scan_name)
     np.save(path, affine)
 
 
-def get_axes_slices_from_volume(raw_volume: np.ndarray):
+def get_axes_slices_from_volume(raw_volume: np.ndarray, axis="x"):
     """
-    Returns middle x, y, z slices from given scan volume.
+    Returns slices from given axis
 
+    :param axis: axis from which return slice
     :param raw_volume: Scan volume
-    :return: middle x, y, z slices
+    :return: list of slices from given axis
     """
-    x_slice = raw_volume[raw_volume.shape[0] // 2]  # Middle 2D slice in x axis
-    y_slice = raw_volume[:, raw_volume.shape[1] // 2]  # Middle 2D slice in y axis
-    z_slice = raw_volume[:, :, raw_volume.shape[2] // 2]  # Middle 2D slice in z axis
-    xyz_slices = [x_slice, y_slice, z_slice]
 
-    return xyz_slices
+    if axis == "x":
+        x_slices = []
+        for current_slice in range(raw_volume.shape[0]):
+            x_slices.append(raw_volume[current_slice])
+
+        return x_slices
+
+    elif axis == "y":
+        y_slices = []
+        for current_slice in range(raw_volume.shape[1]):
+            y_slices.append(raw_volume[:, current_slice])
+
+        return y_slices
+
+    elif axis == "z":
+        z_slices = []
+        for current_slice in range(raw_volume.shape[2]):
+            z_slices.append(raw_volume[:, :, current_slice])
+
+        return z_slices
+    else:
+        raise ValueError("Only x, y, or z axis is available")
 
 
 def normalize_slice_values(scan_slices: list):
@@ -182,5 +201,8 @@ def save_image_to_png(image: np.ndarray, save_path: Path):
     :param save_path: path where image will be saved
     :return:
     """
-    img = Image.fromarray(image)
-    img.save(save_path, format="PNG", optimize=False, compress_level=0)
+    try:
+        img = Image.fromarray(image)
+        img.save(save_path, format="PNG", optimize=False, compress_level=0)
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"Create path {save_path.parent}")
