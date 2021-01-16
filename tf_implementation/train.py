@@ -6,8 +6,9 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from segmentation.dataset import scans_generator
+from segmentation.metrics import f_score
 from segmentation.models import get_unet_model
-from segmentation.losses import dice_coef, dice_accuracy
+from segmentation.losses import dice_loss
 from segmentation.utils import allow_memory_growth
 
 
@@ -27,27 +28,29 @@ def main(args):
                                                                                  backbone=backbone,
                                                                                  batch_size=batch_size)
 
+    dice_score = f_score(threshold=0.5)
+
     model = get_unet_model(backbone=backbone, classes=1, activation="sigmoid", encoder_weights="imagenet")
     model.compile(
         optimizer=tf.keras.optimizers.Adam(lr=1e-3),
-        loss=dice_coef,
-        metrics=[dice_accuracy]
+        loss=dice_loss,
+        metrics=[dice_score]
     )
 
     callbacks = [
         keras.callbacks.EarlyStopping(
-            monitor="val_dice_accuracy",
+            monitor="val_f1-score",
             patience=2,
             verbose=1
         ),
         keras.callbacks.ModelCheckpoint(
-            monitor="val_dice_accuracy",
+            monitor="val_f1-score",
             save_best_only=1,
             verbose=1,
             filepath="model_{epoch}"
         ),
         keras.callbacks.ReduceLROnPlateau(
-            monitor="val_dice_accuracy",
+            monitor="val_f1-score",
             factor=0.5,
             patience=2
         )
