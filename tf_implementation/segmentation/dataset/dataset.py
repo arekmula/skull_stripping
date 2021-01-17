@@ -79,3 +79,36 @@ def scans_generator(scans_train_directory_path: Path, scans_val_directory_path: 
     val_samples = val_images_generator.n
 
     return train_combined_generator, val_combined_generator, train_samples, val_samples
+
+
+def test_scans_generator(scans_directory_path: Path, batch_size=1, target_size=(256, 256), shuffle=False,
+                         backbone="efficientnetb0"):
+    """
+    Tensorflow dataset test generator
+
+    :param scans_directory_path: Directory with "images" folder containing scan slices
+    :param batch_size: batch size
+    :param target_size: image target size
+    :param shuffle: Whether to shuffle the data (default: True) If set to False, sorts the data in alphanumeric order.
+    :param backbone: backbone name of network you will use
+    :return: A DirectoryIterator yielding tuples of (x) where x is a numpy array containing
+    a batch of images with shape (batch_size, *target_size, channels) and y is a numpy array of corresponding labels
+    """
+    preprocess_input = get_preprocessing(backbone)
+
+    images_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+        preprocessing_function=preprocess_input
+    )
+
+    test_images_generator = images_datagen.flow_from_directory(directory=scans_directory_path,
+                                                               target_size=target_size,
+                                                               batch_size=batch_size,
+                                                               seed=42,
+                                                               shuffle=shuffle,
+                                                               class_mode=None,
+                                                               interpolation="bilinear"
+                                                               )
+
+    test_samples = test_images_generator.n
+
+    return test_images_generator, test_samples

@@ -1,3 +1,4 @@
+import json
 import nibabel as nib
 import numpy as np
 from PIL import Image
@@ -144,7 +145,7 @@ def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int, axis
 
 def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x", dataset_number=1):
     """
-    Splits scan and scan's label to separate x, y, z slices and then saves it to separate files.
+    Splits test scan to separate x, y, z slices and then saves it to separate files.
 
     :param axis: axis to split
     :param dataset_number: Number of dataset. Either first or second
@@ -161,6 +162,9 @@ def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x"
         scan_name = scan.name[:-len(file_extension)]
 
         raw_volume, affine = load_raw_volume(scan)
+        shape = {"x": raw_volume.shape[0],
+                 "y": raw_volume.shape[1],
+                 "z": raw_volume.shape[2]}
 
         x_scans = get_axes_slices_from_volume(raw_volume=raw_volume, axis=axis)
         x_scans = normalize_slice_values(x_scans)
@@ -172,10 +176,16 @@ def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x"
 
         path = base_test_save_path / Path("FirstDataset") / scan_name / Path(scan_name)
         np.save(path, affine)
+        with open(str(path) + '.json', "w") as write_file:
+            json.dump(shape, write_file)
+
     elif dataset_number == 2:
         scan_name = scan.name
 
         raw_volume, affine = load_raw_volume(scan / Path("T1w.nii.gz"))
+        shape = {"x": raw_volume.shape[0],
+                 "y": raw_volume.shape[1],
+                 "z": raw_volume.shape[2]}
         x_scans = get_axes_slices_from_volume(raw_volume=raw_volume, axis=axis)
         x_scans = normalize_slice_values(x_scans)
 
@@ -186,6 +196,8 @@ def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x"
 
         path = base_test_save_path / Path("SecondDataset") / scan_name / Path(scan_name)
         np.save(path, affine)
+        with open(str(path) + '.json', "w") as write_file:
+            json.dump(shape, write_file)
 
 
 def get_axes_slices_from_volume(raw_volume: np.ndarray, axis="x"):
@@ -253,3 +265,15 @@ def save_image_to_png(image: np.ndarray, save_path: Path):
         save_path.parent.mkdir(parents=True, exist_ok=True)
         img = Image.fromarray(image)
         img.save(save_path, format="PNG", optimize=False, compress_level=0)
+
+
+def load_affine(affine_path: Path):
+    """
+    Load affine matrix from specific path
+
+    :param affine_path: path to file with affine matrix
+    :return: affine matrix
+    """
+    affine = np.load(str(affine_path))
+    return affine
+
