@@ -41,18 +41,21 @@ def main(args):
         keras.callbacks.EarlyStopping(
             monitor="val_f1-score",
             patience=2,
-            verbose=1
+            verbose=1,
+            mode="max"
         ),
         keras.callbacks.ModelCheckpoint(
             monitor="val_f1-score",
             save_best_only=1,
             verbose=1,
-            filepath="model_{epoch}"
+            filepath="model_{epoch}",
+            mode="max"
         ),
         keras.callbacks.ReduceLROnPlateau(
             monitor="val_f1-score",
             factor=0.5,
-            patience=2
+            patience=2,
+            mode="max"
         )
     ]
 
