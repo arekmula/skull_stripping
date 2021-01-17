@@ -2,7 +2,6 @@ import nibabel as nib
 import numpy as np
 from PIL import Image
 
-from matplotlib import pyplot as plt
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from typing import Tuple
@@ -143,6 +142,52 @@ def save_scan_to_xyz_slices(scan: Tuple, save_path: Path, scan_number: int, axis
     np.save(path, affine)
 
 
+def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x", dataset_number=1):
+    """
+    Splits scan and scan's label to separate x, y, z slices and then saves it to separate files.
+
+    :param axis: axis to split
+    :param dataset_number: Number of dataset. Either first or second
+    :param scan: path to scan
+    :param base_test_save_path: Path to folder where slices will be stored. The folder should have following structure:
+    main folder/
+                FirstDataset/
+                SecondDataset/
+
+    :return:
+    """
+    if dataset_number == 1:
+        file_extension = ".nii.gz"
+        scan_name = scan.name[:-len(file_extension)]
+
+        raw_volume, affine = load_raw_volume(scan)
+
+        x_scans = get_axes_slices_from_volume(raw_volume=raw_volume, axis=axis)
+        x_scans = normalize_slice_values(x_scans)
+
+        print(f"\r Saving scan: {scan_name}")
+        for scan_number, scan in enumerate(x_scans):
+            path = base_test_save_path / Path("FirstDataset") / scan_name / Path("images") / Path(scan_name + str(scan_number) + ".png")
+            save_image_to_png(scan, path)
+
+        path = base_test_save_path / Path("FirstDataset") / scan_name / Path(scan_name)
+        np.save(path, affine)
+    elif dataset_number == 2:
+        scan_name = scan.name
+
+        raw_volume, affine = load_raw_volume(scan / Path("T1w.nii.gz"))
+        x_scans = get_axes_slices_from_volume(raw_volume=raw_volume, axis=axis)
+        x_scans = normalize_slice_values(x_scans)
+
+        print(f"\r Saving scan: {scan_name}")
+        for scan_number, scan in enumerate(x_scans):
+            path = base_test_save_path / Path("SecondDataset") / scan_name / Path("images") / Path(scan_name + str(scan_number) + ".png")
+            save_image_to_png(scan, path)
+
+        path = base_test_save_path / Path("SecondDataset") / scan_name / Path(scan_name)
+        np.save(path, affine)
+
+
 def get_axes_slices_from_volume(raw_volume: np.ndarray, axis="x"):
     """
     Returns slices from given axis
@@ -205,4 +250,6 @@ def save_image_to_png(image: np.ndarray, save_path: Path):
         img = Image.fromarray(image)
         img.save(save_path, format="PNG", optimize=False, compress_level=0)
     except FileNotFoundError as e:
-        raise FileNotFoundError(f"Create path {save_path.parent}")
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        img = Image.fromarray(image)
+        img.save(save_path, format="PNG", optimize=False, compress_level=0)
