@@ -18,9 +18,23 @@ The dataset was shared by a lecturer. It consisted of:
     *  `utils` folder -> display utilities
 - Training code -> `train.py`
 - Training code for Google Colab -> `train.ipynb`
+- Generating predictions code -> `generate_predictions.py`
+- Testing predictions code (Sending predictions to lecturer's server) -> `test_predictions.py`
 
 ### pytorch - TODO
 
 
+## Model
+The model trained by me is available [here](https://drive.google.com/drive/folders/1T52d_eHSe14PpG0ocJ2Iiglz9ndAxH04?usp=sharing). It's Unet based model with EfficientNetB0 backbone. 
+
+### Training process:
+- split scans to train and validation sets
+- generate image and label slices from X axis of each scan and save them to separate `images` and `labels` directories
+- create combined generator for images and labels for both train and validation set. Each image is preprocessed according to EfficientNetB0's rules and resized to target size -> 256,256
+- compile model with loss=DiceLoss and metrics=DiceScore. Define callbacks to model: EarlyStopping, ModelCheckpoint and Reduce Learning Rate On Plateau.
+- fit model using data from training generator and validation generator
+
+
 ## Results
-- TODO
+- Evaluation set Dice Score: 0.9875
+- Test set Dice Score: 0.9866

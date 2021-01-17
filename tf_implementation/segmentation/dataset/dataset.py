@@ -28,7 +28,6 @@ def scans_generator(scans_train_directory_path: Path, scans_val_directory_path: 
     # Preprocess image based on backbone implementation
     preprocess_input = get_preprocessing(backbone)
 
-    # TODO: Check augmentations
     images_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
         # rescale=1/255, # -> Uncomment if not using preprocess_input
         preprocessing_function=preprocess_input
@@ -108,7 +107,6 @@ def test_scans_generator(scans_directory_path: Path, batch_size=1, target_size=(
                                                                class_mode=None,
                                                                interpolation="bilinear"
                                                                )
-
     test_samples = test_images_generator.n
 
     return test_images_generator, test_samples

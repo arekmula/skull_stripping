@@ -171,7 +171,7 @@ def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x"
 
         print(f"\r Saving scan: {scan_name}")
         for scan_number, scan in enumerate(x_scans):
-            path = base_test_save_path / Path("FirstDataset") / scan_name / Path("images") / Path(scan_name + str(scan_number) + ".png")
+            path = base_test_save_path / Path("FirstDataset") / scan_name / Path("images") / Path(scan_name + str("{0:03}".format(scan_number)) + ".png")
             save_image_to_png(scan, path)
 
         path = base_test_save_path / Path("FirstDataset") / scan_name / Path(scan_name)
@@ -191,7 +191,7 @@ def save_test_scan_to_xyz_slices(scan: Path, base_test_save_path: Path, axis="x"
 
         print(f"\r Saving scan: {scan_name}")
         for scan_number, scan in enumerate(x_scans):
-            path = base_test_save_path / Path("SecondDataset") / scan_name / Path("images") / Path(scan_name + str(scan_number) + ".png")
+            path = base_test_save_path / Path("SecondDataset") / scan_name / Path("images") / Path(scan_name + str("{0:03}".format(scan_number)) + ".png")
             save_image_to_png(scan, path)
 
         path = base_test_save_path / Path("SecondDataset") / scan_name / Path(scan_name)

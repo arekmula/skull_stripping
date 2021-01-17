@@ -1,6 +1,6 @@
-import cv2
 import json
 import numpy as np
+import os
 import tensorflow as tf
 from tensorflow import keras
 
@@ -11,7 +11,7 @@ from pathlib import Path
 from segmentation.dataset import test_scans_generator, load_affine, save_labels
 from segmentation.losses import dice_loss
 from segmentation.metrics import f_score
-from segmentation.utils import allow_memory_growth
+from segmentation.utils import allow_memory_growth, show_slices
 
 
 def main(args):
@@ -32,7 +32,8 @@ def main(args):
 
     for scan_path in first_dataset_test_path.iterdir():
         print(f"Processing scan: {scan_path.name}")
-        test_scans, test_samples = test_scans_generator(scan_path)
+        batch_size = len(os.listdir(scan_path / "images"))
+        test_scans, test_samples = test_scans_generator(scan_path, batch_size=batch_size)
         affine = load_affine(affine_path=scan_path / str(scan_path.name + ".npy"))
 
         with open(str(scan_path/scan_path.name) + ".json") as json_file:
@@ -40,18 +41,20 @@ def main(args):
         scan_shape = (shape_dict["x"], shape_dict["y"], shape_dict["z"])
         labels = np.zeros(scan_shape, dtype=np.uint8)
 
-        for sample in range(test_samples):
-            image = next(test_scans)
-            prediction = model.predict(image)[0]
-            prediction = np.where(prediction > 0.5, np.uint8(1), np.uint8(0))
-            prediction_resized = cv2.resize(prediction, (scan_shape[2], scan_shape[1]))
-            labels[sample, :, :] = prediction_resized.squeeze()
+        images = next(test_scans)
+        predictions = model.predict(images)
+        predictions = tf.image.resize(predictions, [scan_shape[1], scan_shape[2]])
+
+        for idx, prediction in enumerate(predictions):
+            prediction_temp = np.where(prediction > 0.5, np.uint8(1), np.uint8(0))
+            labels[idx, :, :] = prediction_temp.squeeze()
 
         save_labels(labels, affine, first_dataset_predictions_path / f"{scan_path.name}.nii.gz")
 
     for scan_path in second_dataset_test_path.iterdir():
         print(f"Processing scan {scan_path.name}")
-        test_scans, test_samples = test_scans_generator(scan_path)
+        batch_size = len(os.listdir(scan_path / "images"))
+        test_scans, test_samples = test_scans_generator(scan_path, batch_size=batch_size)
         affine = load_affine(affine_path=scan_path / str(scan_path.name + ".npy"))
 
         with open(str(scan_path/scan_path.name) + ".json") as json_file:
@@ -59,12 +62,13 @@ def main(args):
         scan_shape = (shape_dict["x"], shape_dict["y"], shape_dict["z"])
         labels = np.zeros(scan_shape, dtype=np.uint8)
 
-        for sample in range(test_samples):
-            image = next(test_scans)
-            prediction = model.predict(image)[0]
+        images = next(test_scans)
+        predictions = model.predict(images)
+        predictions = tf.image.resize(predictions, [scan_shape[1], scan_shape[2]])
+
+        for idx, prediction in enumerate(predictions):
             prediction = np.where(prediction > 0.5, np.uint8(1), np.uint8(0))
-            prediction_resized = cv2.resize(prediction, (scan_shape[2], scan_shape[1]))
-            labels[sample, :, :] = prediction_resized.squeeze()
+            labels[idx, :, :] = prediction.squeeze()
 
         save_labels(labels, affine, second_dataset_predictions_path / f"{scan_path.name}.nii.gz")
 
